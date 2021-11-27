@@ -4,7 +4,7 @@ import zipfile
 from base64 import b64decode
 from json import load
 from shutil import copy
-from crypto.Cipher import AES
+from Cryptodome.Cipher import AES
 from win32crypt import CryptUnprotectData
 
 #if __name__ == "__main__":
